@@ -1,0 +1,44 @@
+name: asaraog-run
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: branch or sha to test
+        required: true
+      pkgs:
+        description: packages for go test
+        default: "./config/ ./rule/ ./notifier/ ./web/ ./metrics/ ./cmd/..."
+      run:
+        description: -run regex
+        default: "."
+      lint:
+        description: run golangci-lint
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ${{ inputs.pkgs }} -run '${{ inputs.run }}' -v -race -count=1
+      - name: Build
+        run: CGO_ENABLED=0 go build ./cmd/chalert
+      - name: Install golangci-lint
+        if: ${{ inputs.lint }}
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+      - name: Lint
+        if: ${{ inputs.lint }}
+        run: golangci-lint run ./...
