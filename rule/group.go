@@ -423,6 +423,7 @@ func (g *Group) updateWith(ng *Group) []*AlertingRule {
 	g.Concurrency = ng.Concurrency
 	g.Labels = ng.Labels
 	g.Limit = ng.Limit
+	g.EvalDelay = ng.EvalDelay
 	g.checksum = ng.checksum
 	return dropped
 }
